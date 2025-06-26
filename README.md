@@ -51,8 +51,9 @@ graph LR
     end
     Grafana -->|Dashboard| User[End User]
 ```
+---
 
-##📁 Folder Structure
+## 📁 Folder Structure
 ```bash
 cloud-devops-eks-pipeline/
 ├── app/                   # Flask app with Dockerfile
