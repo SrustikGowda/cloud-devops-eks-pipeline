@@ -286,7 +286,7 @@ Visit: ```http://localhost:5000```
 
 ## 👨‍💻 Author
 
-Srustik |
+Srustik Gowda
 
 Senior DevOps Engineer | SRE | Cloud Enthusiast
 
