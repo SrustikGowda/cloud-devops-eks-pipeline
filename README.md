@@ -76,8 +76,9 @@ cloud-devops-eks-pipeline/
 ├── architecture.png       # System diagram
 └── README.md              # Project documentation
 ```
+---
 
-##🐍 Flask App Overview
+## 🐍 Flask App Overview
 ```python
 from flask import Flask
 app = Flask(__name__)
@@ -86,8 +87,9 @@ app = Flask(__name__)
 def home():
     return "Hello from Flask on EKS!"
 ```
+---
 
-##⚙️ CI/CD Pipeline (GitHub Actions)
+## ⚙️ CI/CD Pipeline (GitHub Actions)
 
 Location: .github/workflows/ci-cd.yml
 
@@ -147,5 +149,145 @@ jobs:
           --set image.repository=${{ secrets.DOCKER_USERNAME }}/flask-app \
           --set image.tag=$GITHUB_SHA
 ```
+---
+
+## ☁️ Infrastructure (Terraform)
+
+Terraform config (```terraform/main.tf```) provisions:
+
+- EKS Cluster
+- Node Group
+- VPC/Subnets
+- IAM Roles
+
+Deployment:
+```bash
+cd terraform
+terraform init
+terraform apply
+```
+
+Example ```main.tf```:
+```hcl
+provider "aws" {
+  region = "us-east-1"
+}
+
+module "eks" {
+  source  = "terraform-aws-modules/eks/aws"
+  version = "~> 19.0"
+
+  cluster_name    = "my-eks-cluster"
+  cluster_version = "1.29"
+
+  vpc_id     = "vpc-12345678"
+  subnet_ids = ["subnet-12345678", "subnet-87654321"]
+
+  eks_managed_node_groups = {
+    default = {
+      min_size     = 1
+      max_size     = 3
+      desired_size = 2
+      instance_types = ["t3.medium"]
+    }
+  }
+}
+```
+Edit variables.tf for your region, VPC ID, and subnet IDs
+
+---
+
+## 📦 Helm Chart
+
+Helm templates the app deployment and service:
+
+```yaml
+# helm-chart/values.yaml
+replicaCount: 2
+
+image:
+  repository: your-dockerhub-username/flask-app
+  tag: latest
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 5000
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+```
+Installation:
+```bash
+helm upgrade --install flask-app ./helm-chart
+```
+
+---
+
+## 📊 Monitoring (Prometheus + Grafana)
+
+Deployment:
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm install monitoring prometheus-community/kube-prometheus-stack
+kubectl port-forward svc/monitoring-grafana 3000:80
+```
+Access Grafana at: ```http://localhost:3000```
+Default credentials: ```admin / prom-operator```
+
+To get the admin password:
+
+```bash
+kubectl get secret monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 --decode
+```
+
+---
+
+## 🧪 Local Testing
+
+```bash
+cd app
+docker build -t flask-app .
+docker run -p 5000:5000 flask-app
+```
+Visit: ```http://localhost:5000```
+
+---
+
+## 🔒 Security Considerations
+
+- GitHub Secrets for all credentials
+- No hardcoded passwords or keys
+- Least-privilege IAM policies
+- Encrypted secrets in Kubernetes
+- Regular vulnerability scanning
+- Network policies for pod communication
+- AWS Security Groups with minimal access
+
+---
+
+## 🔭 Future Enhancements
+
+- NGINX Ingress with TLS (cert-manager)
+- Horizontal Pod Autoscaler
+- Fluentd/Loki for logging
+- GitOps with ArgoCD/Flux
+- Canary deployments
+- AWS Cost Optimization
+- OPA/Gatekeeper policies
+- Runtime security with Falco
+
+---
+
+## 👨‍💻 Author
+
+Srustik
+Senior DevOps Engineer | SRE | Cloud Enthusiast
+
 
 
